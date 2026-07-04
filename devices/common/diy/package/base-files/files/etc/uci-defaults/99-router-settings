@@ -1,0 +1,57 @@
+#!/bin/sh
+#=================================================
+# 首次启动自定义设置脚本 (执行后自动删除)
+#=================================================
+
+# === 后台地址 + 子网掩码 ===
+uci set network.lan.ipaddr='192.168.10.1'
+uci set network.lan.netmask='255.255.255.0'
+
+# === 主机名 ===
+uci set system.@system[0].hostname='Router'
+
+# === 时区 ===
+uci set system.@system[0].timezone='CST-8'
+uci set system.@system[0].zonename='Asia/Shanghai'
+
+# === 后台快捷访问地址 (http://router) ===
+echo "192.168.10.1 router" >> /etc/hosts
+
+# =============================================
+# ⚠️ 按需修改以下配置，去掉 # 即可启用
+# =============================================
+
+# === 后台密码 ===
+(echo "__ROOT_PASSWD__"; sleep 1; echo "__ROOT_PASSWD__") | passwd root
+
+# === PPPoE 拨号账号/密码 ===
+uci set network.wan.proto='pppoe'
+uci set network.wan.username='__PPPOE_USERNAME__'
+uci set network.wan.password='__PPPOE_PASSWD__'
+
+# === 访问光猫 (ToModem 接口) ===
+uci set network.ToModem=interface
+uci set network.ToModem.proto='static'
+uci set network.ToModem.device='wan'
+uci set network.ToModem.ipaddr='192.168.1.2'
+uci set network.ToModem.netmask='255.255.255.0'
+uci add_list firewall.wan.network='ToModem'
+
+# === WiFi ===
+uci set wireless.@wifi-device[0].disabled='0'
+uci set wireless.@wifi-iface[0].ssid='__WIFI_SSID__'
+uci set wireless.@wifi-iface[0].key='__WIFI_PASSWD__'
+uci set wireless.@wifi-iface[0].encryption='psk2'
+
+# === 旁路由模式 (替换 主路由IP) ===
+# uci set network.lan.gateway='192.168.10.254'
+# uci set network.lan.dns='223.5.5.5'
+# uci del network.wan
+# uci del network.wan6
+
+# === HTTPS 访问后台 (需配合 CONFIG_PACKAGE_luci-ssl-nginx=y) ===
+uci set nginx.@main[0].ssl_enable='1'
+
+uci commit
+
+exit 0
