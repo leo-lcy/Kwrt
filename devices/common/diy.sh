@@ -87,6 +87,9 @@ sed -i -e "s/set \${s}.country='\${country || ''}'/set \${s}.country='\${country
 
 rm -rf package/feeds/packages/jool
 
+# Fix xray-core: remove outdated AllowInsecure patch that fails on new Xray versions
+rm -f feeds/kiddin9/xray-core/patches/AllowInsecure.patch
+
 # Fix PassWall2 status bar bug: wrong paths pointing to passwall(v1) instead of passwall2
 PW2_FILE="package/feeds/kiddin9/luci-app-passwall2/luasrc/view/passwall2/global/status_bottom.htm"
 [ -f "$PW2_FILE" ] && {
