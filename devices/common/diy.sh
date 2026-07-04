@@ -86,3 +86,10 @@ sed -i "s/OpenWrt/Kwrt/g" package/base-files/files/bin/config_generate package/b
 sed -i -e "s/set \${s}.country='\${country || ''}'/set \${s}.country='\${country || \"CN\"}'/g" -e "s/set \${s}.disabled=.*/set \${s}.disabled='0'/" package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc
 
 rm -rf package/feeds/packages/jool
+
+# Fix PassWall2 status bar bug: wrong paths pointing to passwall(v1) instead of passwall2
+PW2_FILE="package/feeds/kiddin9/luci-app-passwall2/luasrc/view/passwall2/global/status_bottom.htm"
+[ -f "$PW2_FILE" ] && {
+  sed -i 's#/luci-static/passwall/#/luci-static/passwall2/#g' "$PW2_FILE"
+  sed -i 's#\[\[passwall\]\]#\[\[passwall2\]\]#g' "$PW2_FILE"
+}
