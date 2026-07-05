@@ -288,7 +288,9 @@ jobs:
       with:
         name: ${{ env.VERSION }}_${{matrix.target}}
         path: |
-          openwrt/bin/targets/
+          openwrt/bin/targets/*/*/kwrt-*.bin
+          openwrt/bin/targets/*/*/kwrt-*.manifest
+          openwrt/bin/targets/*/*/*.config
 
     - name: Create release
       id: create_release
