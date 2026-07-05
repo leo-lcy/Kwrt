@@ -233,6 +233,13 @@ jobs:
         make defconfig
         fi
         cat .config
+        # === ASSERT: must be AX6000 ===
+        grep -q "CONFIG_TARGET_DEVICE_mediatek_filogic_DEVICE_xiaomi_redmi-router-ax6000-stock=y" .config || {
+          echo "❌ FATAL: Wrong device! Got:"
+          grep "CONFIG_TARGET_DEVICE_mediatek_filogic_DEVICE_.*=y" .config || echo "(none)"
+          exit 1
+        }
+        echo "✅ Device check: AX6000 confirmed"
 
     - name: Cache
       uses: stupidloud/cachewrtbuild@main
