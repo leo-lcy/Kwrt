@@ -15,7 +15,6 @@ sed -i "s?git.openwrt.org/\(project\|feed\)?github.com/openwrt?g" feeds.conf.def
 ./scripts/feeds install -a -p kiddin9 -f
 ./scripts/feeds install -a
 
-sed --follow-symlinks -i "s#%C\"#%C by Kiddin'\"#" package/base-files/files/etc/os-release
 sed -i -e '$a /etc/bench.log' \
         -e '/\/etc\/profile/d' \
         -e '/\/etc\/shinit/d' \
@@ -23,7 +22,7 @@ sed -i -e '$a /etc/bench.log' \
 sed -i -e '/^\/etc\/profile/d' \
         -e '/^\/etc\/shinit/d' \
         package/base-files/Makefile
-sed -i "s/192.168.1/10.0.0/" package/base-files/files/bin/config_generate
+sed -i "s/192.168.1/192.168.10/" package/base-files/files/bin/config_generate
 
 sed -i "s#false; \\\#true; \\\#" include/download.mk
 
@@ -40,7 +39,7 @@ git_clone_path openwrt-25.12 https://github.com/immortalwrt/immortalwrt package/
 echo "$(date +"%s")" >version.date
 sed -i '/$(curdir)\/compile:/c\$(curdir)/compile: package/opkg/host/compile' package/Makefile
 sed -i "s/DEFAULT_PACKAGES:=/DEFAULT_PACKAGES:=luci-app-advancedplus luci-app-firewall luci-app-package-manager luci-app-upnp luci-app-syscontrol \
-luci-app-wizard luci-base luci-compat luci-lib-ipkg luci-lib-fs \
+luci-base luci-compat luci-lib-ipkg luci-lib-fs \
 coremark wget-ssl curl autocore htop nano zram-swap kmod-lib-zstd kmod-tcp-bbr bash openssh-sftp-server block-mount resolveip ds-lite swconfig luci-app-fan luci-app-filemanager luci-app-wifihistory /" include/target.mk
 
 sed -i "s/^.*vermagic$/\techo '1' > \$(LINUX_DIR)\/.vermagic/" include/kernel-defaults.mk
@@ -81,8 +80,16 @@ sed -i \
 	-e 's?../../lang?$(TOPDIR)/feeds/packages/lang?' \
 	package/feeds/kiddin9/*/Makefile
 
-sed -i "s/OpenWrt/Kwrt/g" package/base-files/files/bin/config_generate package/base-files/image-config.in package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc config/Config-images.in Config.in include/u-boot.mk include/version.mk || true
-
 sed -i -e "s/set \${s}.country='\${country || ''}'/set \${s}.country='\${country || \"CN\"}'/g" -e "s/set \${s}.disabled=.*/set \${s}.disabled='0'/" package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc
 
 rm -rf package/feeds/packages/jool
+
+# Fix xray-core: remove outdated AllowInsecure patch that fails on new Xray versions
+rm -f feeds/kiddin9/xray-core/patches/AllowInsecure.patch
+
+# Fix PassWall2 status bar bug: wrong paths pointing to passwall(v1) instead of passwall2
+PW2_FILE="package/feeds/kiddin9/luci-app-passwall2/luasrc/view/passwall2/global/status_bottom.htm"
+[ -f "$PW2_FILE" ] && {
+  sed -i 's#/luci-static/passwall/#/luci-static/passwall2/#g' "$PW2_FILE"
+  sed -i 's#\[\[passwall\]\]#\[\[passwall2\]\]#g' "$PW2_FILE"
+}
