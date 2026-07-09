@@ -61,6 +61,12 @@ uci set firewall.@rule[-1].target='ACCEPT'
 
 # === Tailscale 网段访问 LuCI: 见 /etc/rc.local (开机末尾执行) ===
 
+# === 关闭 dnsmasq rebind 保护 (passwall2 fake-ip 返回私有段会被拦截) ===
+uci set dhcp.@dnsmasq[0].rebind_protection='0'
+
+# === 关闭 miniupnpd (CGNAT 环境下 UPnP 无效, 省资源) ===
+/etc/init.d/miniupnpd disable
+
 uci commit
 
 exit 0
