@@ -71,15 +71,19 @@ jobs:
       run: |
         python3 -c "
         import os
-        path = '${{ github.workspace }}/devices/common/diy/package/base-files/files/etc/uci-defaults/99-router-settings'
-        with open(path, 'r') as f:
-            content = f.read()
-        content = content.replace('__ROOT_PASSWD__', os.environ['ROOT_PASSWD'])
-        content = content.replace('__PPPOE_USERNAME__', os.environ['PPPOE_USERNAME'])
-        content = content.replace('__PPPOE_PASSWD__', os.environ['PPPOE_PASSWD'])
-        content = content.replace('__WIFI_PASSWD__', os.environ['WIFI_PASSWD'])
-        with open(path, 'w') as f:
-            f.write(content)
+        paths = [
+          '${{ github.workspace }}/devices/common/diy/package/base-files/files/etc/uci-defaults/99-router-settings',
+          '${{ github.workspace }}/devices/common/diy/package/base-files/files/etc/rc.local',
+        ]
+        for path in paths:
+            with open(path, 'r') as f:
+                content = f.read()
+            content = content.replace('__ROOT_PASSWD__', os.environ['ROOT_PASSWD'])
+            content = content.replace('__PPPOE_USERNAME__', os.environ['PPPOE_USERNAME'])
+            content = content.replace('__PPPOE_PASSWD__', os.environ['PPPOE_PASSWD'])
+            content = content.replace('__WIFI_PASSWD__', os.environ['WIFI_PASSWD'])
+            with open(path, 'w') as f:
+                f.write(content)
         "
 
     - name: Trigger Packages Update

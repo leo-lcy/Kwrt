@@ -37,17 +37,7 @@ uci set network.ToModem.ipaddr='192.168.1.2'
 uci set network.ToModem.netmask='255.255.255.0'
 uci add_list firewall.wan.network='ToModem'
 
-# === WiFi ===
-# 2.4G
-uci set wireless.@wifi-device[0].disabled='0'
-uci set wireless.@wifi-iface[0].ssid='Home 2.4G'
-uci set wireless.@wifi-iface[0].key='__WIFI_PASSWD__'
-uci set wireless.@wifi-iface[0].encryption='psk2'
-# 5G
-uci set wireless.@wifi-device[1].disabled='0'
-uci set wireless.@wifi-iface[1].ssid='Home 5G'
-uci set wireless.@wifi-iface[1].key='__WIFI_PASSWD__'
-uci set wireless.@wifi-iface[1].encryption='psk2'
+# === WiFi 配置见 /etc/rc.local (开机末尾执行, 此时 wireless 配置已生成) ===
 
 # === 旁路由模式 (替换 主路由IP) ===
 # uci set network.lan.gateway='192.168.10.254'
@@ -69,8 +59,7 @@ uci set firewall.@rule[-1].src='wan'
 uci set firewall.@rule[-1].dest_port='41641'
 uci set firewall.@rule[-1].target='ACCEPT'
 
-# === Tailscale 网段访问 LuCI: 允许 100.64.0.0/10 (CGNAT) ===
-sed -i '/^deny all;/i allow 100.64.0.0/10;' /etc/nginx/restrict_locally 2>/dev/null
+# === Tailscale 网段访问 LuCI: 见 /etc/rc.local (开机末尾执行) ===
 
 uci commit
 
