@@ -67,6 +67,16 @@ uci set dhcp.@dnsmasq[0].rebind_protection='0'
 # === 关闭 miniupnpd (CGNAT 环境下 UPnP 无效, 省资源) ===
 /etc/init.d/miniupnpd disable
 
+# === Turbo ACC: 关闭 Flow offloading / 硬件 NAT (会绕过 netfilter, 破坏 passwall2/tailscale) ===
+uci set turboacc.config.fastpath='disabled'
+uci set turboacc.config.fastpath_fo_hw='0'
+
+# === 全锥形 NAT1 (FULLCONENAT 兼容模式, 配合 passwall2 fullcone) ===
+uci set turboacc.config.fullcone='1'
+
+# === TCP 拥塞控制: bbr ===
+uci set turboacc.config.tcpcca='bbr'
+
 uci commit
 
 exit 0
