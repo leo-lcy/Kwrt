@@ -58,6 +58,17 @@ uci set wireless.@wifi-iface[1].encryption='psk2'
 # === HTTPS 访问后台 (需配合 CONFIG_PACKAGE_luci-ssl-nginx=y) ===
 uci set nginx.@main[0].ssl_enable='1'
 
+# === Tailscale 打洞辅助: 允许 wan UDP 41641 入站 ===
+uci add firewall rule
+uci set firewall.@rule[-1].name='Allow_Tailscale_Input'
+uci set firewall.@rule[-1].proto='udp'
+uci set firewall.@rule[-1].src='wan'
+uci set firewall.@rule[-1].dest_port='41641'
+uci set firewall.@rule[-1].target='ACCEPT'
+
+# === Tailscale 网段访问 LuCI: 允许 100.64.0.0/10 (CGNAT) ===
+sed -i '/^deny all;/i allow 100.64.0.0/10;' /etc/nginx/restrict_locally 2>/dev/null
+
 uci commit
 
 exit 0
