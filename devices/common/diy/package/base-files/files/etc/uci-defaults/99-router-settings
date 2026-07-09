@@ -77,6 +77,19 @@ uci set turboacc.config.fullcone='1'
 # === TCP 拥塞控制: bbr ===
 uci set turboacc.config.tcpcca='bbr'
 
+# === 清理 br-lan 重复端口 (board 默认 + diy 叠加导致) ===
+uci -q delete network.@device[0].ports
+uci add_list network.@device[0].ports='lan1'
+uci add_list network.@device[0].ports='lan2'
+uci add_list network.@device[0].ports='lan3'
+uci add_list network.@device[0].ports='lan4'
+
+# === NTP 换国内源 ===
+uci -q delete system.ntp.server
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='ntp.tencent.com'
+uci add_list system.ntp.server='cn.ntp.org.cn'
+
 uci commit
 
 exit 0
