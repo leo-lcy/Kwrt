@@ -55,6 +55,9 @@ uci set wireless.@wifi-iface[1].encryption='psk2'
 # uci del network.wan
 # uci del network.wan6
 
+# === SSH 端口改为 30001 ===
+uci set dropbear.@dropbear[0].Port='30001'
+
 # === HTTPS 访问后台 (需配合 CONFIG_PACKAGE_luci-ssl-nginx=y) ===
 uci set nginx.@main[0].ssl_enable='1'
 
