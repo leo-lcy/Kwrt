@@ -80,7 +80,7 @@ sed -i \
 	-e 's?../../lang?$(TOPDIR)/feeds/packages/lang?' \
 	package/feeds/kiddin9/*/Makefile
 
-sed -i -e "s/set \${s}.country='\${country || ''}'/set \${s}.country='\${country || \"CN\"}'/g" -e "s/set \${s}.disabled=.*/set \${s}.disabled='0'/" package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc
+sed -i -e "s/set \${s}.country='\${country || ''}'/set \${s}.country='\${country || \"CN\"}'/g" -e "s/set \${si}.disabled=.*/set \${si}.disabled='0'/" package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc
 
 rm -rf package/feeds/packages/jool
 
