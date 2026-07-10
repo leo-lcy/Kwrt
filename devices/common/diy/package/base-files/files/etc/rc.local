@@ -23,6 +23,16 @@ if grep -q 'deny all;' /etc/nginx/restrict_locally 2>/dev/null && ! grep -q '100
 	/etc/init.d/nginx restart 2>/dev/null
 fi
 
+# === Turbo ACC: 放 rc.local 是因为 turboacc 包的 uci-defaults 会覆盖 uci-defaults 里的设置 ===
+#   turboacc 包脚本 (按文件名排在 99-* 之后) 会用 cat > 重写 /etc/config/turboacc
+#   必须在它跑完之后 (rc.local, S95done) 再设, 并 restart 让其 sync 到 firewall
+uci set turboacc.config.fastpath='disabled'
+uci set turboacc.config.fastpath_fo_hw='0'
+uci set turboacc.config.fullcone='1'
+uci set turboacc.config.tcpcca='bbr'
+uci commit turboacc
+/etc/init.d/turboacc restart >/dev/null 2>&1
+
 # === 自删: 只跑一次 ===
 rm -f "$0"
 exit 0
