@@ -282,7 +282,7 @@ jobs:
       if: env.SSH_PRIVATE_KEY && ! contains(github.event.action, 'noser')
       with:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        ARGS: "-avr --timeout=600 --include='kwrt-imagebuilder-*' --include='kwrt-*-initramfs*' --exclude='kwrt-*'"
+        ARGS: "-avr --timeout=600 --include='openwrt-imagebuilder-*' --include='openwrt-*-initramfs*' --exclude='openwrt-*'"
         SSH_CMD_ARGS: "-o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o StrictHostKeyChecking=no"
         SOURCE: openwrt/bin/targets
         REMOTE_HOST: ${{ secrets.SERVER_HOST }}
@@ -296,8 +296,8 @@ jobs:
       with:
         name: ${{ env.VERSION }}_${{matrix.target}}
         path: |
-          openwrt/bin/targets/*/*/kwrt-*.bin
-          openwrt/bin/targets/*/*/kwrt-*.manifest
+          openwrt/bin/targets/*/*/openwrt-*.bin
+          openwrt/bin/targets/*/*/openwrt-*.manifest
           openwrt/bin/targets/*/*/*.config
 
     - name: Create release
