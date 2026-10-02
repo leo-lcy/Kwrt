@@ -1,0 +1,4 @@
+#!/bin/sh
+[ "$ACTION" = 'add' ] || exit 0
+[ -n "$INTERFACE" ] || exit 0
+/usr/sbin/f50-wan "$INTERFACE"

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Called at first boot and on USB network add events; do not assume usb0/eth2.
+[ "$(uci -q get network.wan_f50.proto)" = 'dhcp' ] || exit 0
+for netdev in /sys/class/net/*; do
+	iface=${netdev##*/}
+	[ -z "$1" ] || [ "$iface" = "$1" ] || continue
+	driver=$(readlink -f "$netdev/device/driver")
+	case "${driver##*/}" in
+		rndis_host|cdc_ether|cdc_ncm) ;;
+		*) continue ;;
+	esac
+	if [ "$(uci -q get network.wan_f50.device)" != "$iface" ]; then
+		uci set "network.wan_f50.device=$iface"
+		uci commit network
+		logger -t f50-wan "USB WAN bound to $iface (${driver##*/})"
+		/etc/init.d/network reload
+	fi
+	ifup wan_f50
+	exit 0
+done
+exit 0

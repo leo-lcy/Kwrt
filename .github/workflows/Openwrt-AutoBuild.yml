@@ -11,6 +11,14 @@ name: Build OpenWrt
 on:
   workflow_dispatch:
     inputs:
+      device:
+        description: '选择编译机型'
+        type: choice
+        options:
+          - ax6000
+          - cudy_tr3000
+        default: ax6000
+        required: true
       nocache:
         description: '清除编译缓存 (重新拉取 luci feed 等)'
         type: boolean
@@ -35,11 +43,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    name: Build ${{matrix.target}}
+    name: Build ${{ matrix.device }}
+    env:
+      BUILD_DEVICE: ${{ matrix.device }}
     strategy:
       fail-fast: false
       matrix:
         target: ["mediatek_filogic"]
+        device: ["${{ inputs.device || github.event.client_payload.device || 'ax6000' }}"]
         
     steps:
     - name: Checkout
@@ -55,6 +66,15 @@ jobs:
     - name: Load Settings.ini
       run: |
         echo ${{matrix.target}}
+        case "$BUILD_DEVICE" in
+          ax6000)
+            echo 'PROFILE_DIR=' >> "$GITHUB_ENV"
+            ;;
+          cudy_tr3000)
+            echo 'PROFILE_DIR=devices/cudy_tr3000' >> "$GITHUB_ENV"
+            ;;
+          *) echo 'Unsupported device'; exit 1 ;;
+        esac
         source "${{ github.workspace }}/devices/common/settings.ini"
         if [ -f "devices/${{matrix.target}}/settings.ini" ]; then
           source "${{ github.workspace }}/devices/${{matrix.target}}/settings.ini"
@@ -73,6 +93,7 @@ jobs:
         sed -i "1a TARGET=${{matrix.target}}" ${{ github.workspace }}/devices/common/diy.sh
 
     - name: Inject secrets into router config
+      if: matrix.device == 'ax6000'
       run: |
         python3 -c "
         import os
@@ -90,6 +111,10 @@ jobs:
             with open(path, 'w') as f:
                 f.write(content)
         "
+
+    - name: Inject Cudy settings
+      if: matrix.device == 'cudy_tr3000'
+      run: python3 scripts/inject-cudy-secrets.py
 
     - name: Trigger Packages Update
       continue-on-error: true
@@ -205,6 +230,10 @@ jobs:
         cp -rf devices/common/. openwrt/
         cp -rf devices/${{matrix.target}}/. openwrt/
         cp -rf devices openwrt/
+        if [ -n "$PROFILE_DIR" ]; then
+          cp -rf "$PROFILE_DIR/diy/." openwrt/diy/
+          rm -f openwrt/diy/package/base-files/files/etc/uci-defaults/99-router-settings
+        fi
         cd openwrt
         chmod +x devices/common/$DIY_SH
         /bin/bash "devices/common/$DIY_SH"
@@ -212,6 +241,10 @@ jobs:
         if [ -f "devices/${{matrix.target}}/$CONFIG_FILE" ]; then
           echo >> .config
           cat devices/${{matrix.target}}/$CONFIG_FILE >> .config
+        fi
+        if [ -n "$PROFILE_DIR" ]; then
+          echo >> .config
+          cat "$PROFILE_DIR/$CONFIG_FILE" >> .config
         fi
         if [ -f "devices/${{matrix.target}}/$DIY_SH" ]; then
           chmod +x devices/${{matrix.target}}/$DIY_SH
@@ -245,7 +278,7 @@ jobs:
       uses: stupidloud/cachewrtbuild@main
       with:
         ccache: 'false'
-        mixkey: ${{ matrix.target }}
+        mixkey: ${{ matrix.target }}-${{ matrix.device }}
         clean: ${{ contains(github.event.action, 'nocache') || inputs.nocache }}
         prefix: ${{ github.workspace }}/openwrt
 
@@ -264,6 +297,13 @@ jobs:
         rm -rf staging_dir/toolchain-*/bin/*openwrt-linux-musl-lto-dump
         rm -rf staging_dir/toolchain-*/initial
         df -hT
+
+    - name: Validate firmware
+      run: |
+        python3 scripts/check-firmware.py \
+          --device "$BUILD_DEVICE" \
+          --directory openwrt/bin/targets/mediatek/filogic \
+          --config openwrt/.config
 
     - name: Organize files
       id: organize
@@ -294,11 +334,14 @@ jobs:
       uses: actions/upload-artifact@main
       if: env.UPLOAD_FIRMWARE_FOR_ARTIFACT == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}
+        name: ${{ env.VERSION }}_${{ matrix.device }}
+        if-no-files-found: error
         path: |
           openwrt/bin/targets/*/*/openwrt-*.bin
           openwrt/bin/targets/*/*/openwrt-*.manifest
           openwrt/bin/targets/*/*/*.config
+          openwrt/bin/targets/*/*/sha256sums
+          openwrt/bin/targets/*/*/profiles.json
 
     - name: Create release
       id: create_release

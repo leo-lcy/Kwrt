@@ -1,0 +1,63 @@
+#!/bin/sh
+# Cudy TR3000 v1 112M: F50 USB WAN, default wired LAN/WAN from board.d.
+ROOT_PASSWD=__ROOT_PASSWD_SHELL__
+
+uci set network.lan.ipaddr='192.168.10.1'
+uci set network.lan.netmask='255.255.255.0'
+uci set system.@system[0].hostname='Cudy-TR3000'
+uci set system.@system[0].timezone='CST-8'
+uci set system.@system[0].zonename='Asia/Shanghai'
+echo '192.168.10.1 router' >> /etc/hosts
+printf '%s\n%s\n' "$ROOT_PASSWD" "$ROOT_PASSWD" | passwd root
+unset ROOT_PASSWD
+uci set dropbear.@dropbear[0].Port='30001'
+uci set nginx.@main[0].ssl_enable='1'
+
+# Keep the board's eth0 wired WAN available; prefer F50 when both are connected.
+uci set network.wan.proto='dhcp'
+uci -q delete network.wan.username
+uci -q delete network.wan.password
+uci set network.wan.metric='20'
+if uci -q get network.wan6 >/dev/null; then
+	uci set network.wan6.metric='20'
+fi
+uci set network.wan_f50=interface
+uci set network.wan_f50.proto='dhcp'
+uci set network.wan_f50.metric='10'
+uci set network.wan_f50.auto='1'
+# USB interface name is discovered by /usr/sbin/f50-wan.
+uci set network.wan_f50_6=interface
+uci set network.wan_f50_6.proto='dhcpv6'
+uci set network.wan_f50_6.device='@wan_f50'
+uci set network.wan_f50_6.reqaddress='try'
+uci set network.wan_f50_6.reqprefix='auto'
+uci set network.wan_f50_6.metric='10'
+
+uci set firewall.f50=zone
+uci set firewall.f50.name='f50'
+uci set firewall.f50.input='REJECT'
+uci set firewall.f50.output='ACCEPT'
+uci set firewall.f50.forward='REJECT'
+uci set firewall.f50.masq='1'
+uci set firewall.f50.mtu_fix='1'
+uci -q delete firewall.f50.network
+uci add_list firewall.f50.network='wan_f50'
+uci add_list firewall.f50.network='wan_f50_6'
+uci set firewall.lan_to_f50=forwarding
+uci set firewall.lan_to_f50.src='lan'
+uci set firewall.lan_to_f50.dest='f50'
+uci set firewall.allow_tailscale_f50=rule
+uci set firewall.allow_tailscale_f50.name='Allow_Tailscale_F50'
+uci set firewall.allow_tailscale_f50.src='f50'
+uci set firewall.allow_tailscale_f50.proto='udp'
+uci set firewall.allow_tailscale_f50.dest_port='41641'
+uci set firewall.allow_tailscale_f50.target='ACCEPT'
+
+uci set dhcp.@dnsmasq[0].rebind_protection='0'
+/etc/init.d/miniupnpd disable
+uci -q delete system.ntp.server
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='ntp.tencent.com'
+uci add_list system.ntp.server='cn.ntp.org.cn'
+uci commit
+exit 0
