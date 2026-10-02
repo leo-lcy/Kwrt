@@ -46,6 +46,52 @@ uci add_list firewall.f50.network='wan_f50_6'
 uci set firewall.lan_to_f50=forwarding
 uci set firewall.lan_to_f50.src='lan'
 uci set firewall.lan_to_f50.dest='f50'
+
+# The default WAN rules only cover zone 'wan'; F50 needs its own DHCP and IPv6 rules.
+uci set firewall.f50_dhcp_renew=rule
+uci set firewall.f50_dhcp_renew.name='Allow_DHCP_Renew_F50'
+uci set firewall.f50_dhcp_renew.src='f50'
+uci set firewall.f50_dhcp_renew.proto='udp'
+uci set firewall.f50_dhcp_renew.dest_port='68'
+uci set firewall.f50_dhcp_renew.family='ipv4'
+uci set firewall.f50_dhcp_renew.target='ACCEPT'
+
+uci set firewall.f50_dhcpv6=rule
+uci set firewall.f50_dhcpv6.name='Allow_DHCPv6_F50'
+uci set firewall.f50_dhcpv6.src='f50'
+uci set firewall.f50_dhcpv6.proto='udp'
+uci set firewall.f50_dhcpv6.dest_port='546'
+uci set firewall.f50_dhcpv6.family='ipv6'
+uci set firewall.f50_dhcpv6.target='ACCEPT'
+
+uci set firewall.f50_mld=rule
+uci set firewall.f50_mld.name='Allow_MLD_F50'
+uci set firewall.f50_mld.src='f50'
+uci set firewall.f50_mld.proto='icmp'
+uci set firewall.f50_mld.src_ip='fe80::/10'
+uci set firewall.f50_mld.family='ipv6'
+uci set firewall.f50_mld.target='ACCEPT'
+for icmp_type in '130/0' '131/0' '132/0' '143/0'; do
+	uci add_list "firewall.f50_mld.icmp_type=$icmp_type"
+done
+
+for rule in f50_icmpv6_input f50_icmpv6_forward; do
+	uci set "firewall.$rule=rule"
+	uci set "firewall.$rule.name=Allow_$rule"
+	uci set "firewall.$rule.src=f50"
+	uci set "firewall.$rule.proto=icmp"
+	uci set "firewall.$rule.family=ipv6"
+	uci set "firewall.$rule.target=ACCEPT"
+	uci set "firewall.$rule.limit=1000/sec"
+	for icmp_type in echo-request echo-reply destination-unreachable packet-too-big time-exceeded bad-header unknown-header-type; do
+		uci add_list "firewall.$rule.icmp_type=$icmp_type"
+	done
+done
+uci set firewall.f50_icmpv6_forward.dest='lan'
+for icmp_type in router-solicitation neighbour-solicitation router-advertisement neighbour-advertisement; do
+	uci add_list "firewall.f50_icmpv6_input.icmp_type=$icmp_type"
+done
+
 uci set firewall.allow_tailscale_f50=rule
 uci set firewall.allow_tailscale_f50.name='Allow_Tailscale_F50'
 uci set firewall.allow_tailscale_f50.src='f50'

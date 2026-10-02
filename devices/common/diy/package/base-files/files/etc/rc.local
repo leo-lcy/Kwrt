@@ -1,5 +1,7 @@
 #!/bin/sh
 #=================================================
+
+WIFI_PASSWD=__WIFI_PASSWD_SHELL__
 # 开机末尾执行 (此时 wireless/nginx 配置均已生成)
 # 幂等 + 自删: 只跑一次
 #=================================================
@@ -7,11 +9,11 @@
 # === WiFi: 配置双频 (disabled 由 diy.sh 改 mac80211.uc 默认值解决) ===
 uci set wireless.@wifi-device[0].channel='11'
 uci set wireless.@wifi-iface[0].ssid='Home 2.4G'
-uci set wireless.@wifi-iface[0].key='__WIFI_PASSWD__'
+uci set "wireless.@wifi-iface[0].key=$WIFI_PASSWD"
 uci set wireless.@wifi-iface[0].encryption='psk2'
 uci set wireless.@wifi-device[1].channel='157'
 uci set wireless.@wifi-iface[1].ssid='Home 5G'
-uci set wireless.@wifi-iface[1].key='__WIFI_PASSWD__'
+uci set "wireless.@wifi-iface[1].key=$WIFI_PASSWD"
 uci set wireless.@wifi-iface[1].encryption='psk2'
 uci commit wireless
 wifi reload

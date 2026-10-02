@@ -3,6 +3,10 @@
 # 首次启动自定义设置脚本 (执行后自动删除)
 #=================================================
 
+ROOT_PASSWD=__ROOT_PASSWD_SHELL__
+PPPOE_USERNAME=__PPPOE_USERNAME_SHELL__
+PPPOE_PASSWD=__PPPOE_PASSWD_SHELL__
+
 # === 后台地址 + 子网掩码 ===
 uci set network.lan.ipaddr='192.168.10.1'
 uci set network.lan.netmask='255.255.255.0'
@@ -22,12 +26,12 @@ echo "192.168.10.1 router" >> /etc/hosts
 # =============================================
 
 # === 后台密码 ===
-(echo "__ROOT_PASSWD__"; sleep 1; echo "__ROOT_PASSWD__") | passwd root
+printf '%s\n%s\n' "$ROOT_PASSWD" "$ROOT_PASSWD" | passwd root
 
 # === PPPoE 拨号账号/密码 ===
 uci set network.wan.proto='pppoe'
-uci set network.wan.username='__PPPOE_USERNAME__'
-uci set network.wan.password='__PPPOE_PASSWD__'
+uci set "network.wan.username=$PPPOE_USERNAME"
+uci set "network.wan.password=$PPPOE_PASSWD"
 
 # === 访问光猫 (ToModem 接口) ===
 uci set network.ToModem=interface
@@ -35,7 +39,15 @@ uci set network.ToModem.proto='static'
 uci set network.ToModem.device='wan'
 uci set network.ToModem.ipaddr='192.168.1.2'
 uci set network.ToModem.netmask='255.255.255.0'
-uci add_list firewall.wan.network='ToModem'
+# Firewall zones may use anonymous sections; locate the WAN zone by its name.
+for zone in $(uci -q show firewall | sed -n 's/^firewall\.\([^=]*\)=zone$/\1/p'); do
+	[ "$(uci -q get "firewall.$zone.name")" = 'wan' ] || continue
+	case " $(uci -q get "firewall.$zone.network") " in
+		*' ToModem '*) ;;
+		*) uci add_list "firewall.$zone.network=ToModem" ;;
+	esac
+	break
+done
 
 # === WiFi 配置见 /etc/rc.local (开机末尾执行, 此时 wireless 配置已生成) ===
 
@@ -67,12 +79,7 @@ uci set dhcp.@dnsmasq[0].rebind_protection='0'
 # === 关闭 miniupnpd (CGNAT 环境下 UPnP 无效, 省资源) ===
 /etc/init.d/miniupnpd disable
 
-# === 清理 br-lan 重复端口 (board 默认 + diy 叠加导致) ===
-uci -q delete network.@device[0].ports
-uci add_list network.@device[0].ports='lan1'
-uci add_list network.@device[0].ports='lan2'
-uci add_list network.@device[0].ports='lan3'
-uci add_list network.@device[0].ports='lan4'
+# LAN ports are provided by board.d: lan2 / lan3 / lan4, with wan kept separate.
 
 # === NTP 换国内源 ===
 uci -q delete system.ntp.server

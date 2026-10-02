@@ -21,12 +21,22 @@ def check(device: str, directory: Path, config: Path) -> None:
     if len(images) != 1 or images[0].stat().st_size == 0:
         raise ValueError(f'Expected one nonempty sysupgrade image for {profile}')
     # Ensure the other personal device was not accidentally selected.
-    enabled = {line for line in config.read_text().splitlines() if line.endswith('=y')}
+    config_lines = config.read_text().splitlines()
+    enabled = {line for line in config_lines if line.endswith('=y')}
     for name, other in PROFILES.items():
         symbol = f'CONFIG_TARGET_DEVICE_mediatek_filogic_DEVICE_{other}=y'
         if (symbol in enabled) != (name == device):
             raise ValueError(f'Unexpected device selection: {other}')
     manifests = list(directory.glob(f'*-{profile}.manifest'))
+    # A multiple-device build with a shared rootfs has TARGET_PROFILE="";
+    # OpenWrt then emits one target manifest rather than a device manifest.
+    if not manifests and 'CONFIG_TARGET_PER_DEVICE_ROOTFS=y' not in enabled:
+        selected = {
+            line for line in enabled
+            if line.startswith('CONFIG_TARGET_DEVICE_mediatek_filogic_DEVICE_')
+        }
+        if selected == {f'CONFIG_TARGET_DEVICE_mediatek_filogic_DEVICE_{profile}=y'}:
+            manifests = list(directory.glob('openwrt-mediatek-filogic.manifest'))
     if len(manifests) != 1:
         raise ValueError(f'Missing package manifest for {profile}')
     installed = {line.split()[0] for line in manifests[0].read_text().splitlines() if line.strip()}
