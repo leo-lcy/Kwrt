@@ -12,6 +12,7 @@ sed -i '/	refresh_config();/d' scripts/feeds
 sed -i "s?git.openwrt.org/\(project\|feed\)?github.com/openwrt?g" feeds.conf.default
 
 ./scripts/feeds update -a
+/bin/bash devices/common/prepare-golang.sh || exit 1
 ./scripts/feeds install -a -p kiddin9 -f
 ./scripts/feeds install -a
 
@@ -51,8 +52,6 @@ while [[ "$status" == "in_progress" || "$status" == "queued" ]];do
 	sleep 5
 	status=$(curl -H "Authorization: token $REPO_TOKEN" -s "https://api.github.com/repos/kiddin9/op-packages/actions/runs" | jq -r '.workflow_runs[0].status')
 done
-
-wget -N https://raw.githubusercontent.com/openwrt/packages/master/lang/golang/golang/Makefile -P feeds/packages/lang/golang/golang/
 
 #sed -i "/call Build\/check-size,\$\$(KERNEL_SIZE)/d" include/image.mk
 
