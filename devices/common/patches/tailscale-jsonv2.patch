@@ -1,0 +1,15 @@
+--- a/feeds/packages/net/tailscale/Makefile
++++ b/feeds/packages/net/tailscale/Makefile
+@@ -34,6 +34,11 @@
+ include $(INCLUDE_DIR)/package.mk
+ include ../../lang/golang/golang-package.mk
+-
++
++# Tailscale's pinned go-json-experiment/json uses APIs removed in Go 1.27.
++# Keep its standalone implementation until the dependency is updated.
++# Pass this explicitly: golang-values.mk unexports ambient GOEXPERIMENT.
++GO_PKG_BUILD_VARS += GOEXPERIMENT=nojsonv2
++
+ define Package/tailscale
+   SECTION:=net
+   CATEGORY:=Network
