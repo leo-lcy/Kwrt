@@ -6,9 +6,9 @@
  	cudy,tr3000-v1|\
 -	cudy,tr3000-v1-ubootmod|\
 +	cudy,tr3000-mod|\
+ 	cudy,wr3000u-v1|\
  	cudy,wbr3000uax-v1|\
  	cudy,wbr3000uax-v1-ubootmod|\
- 	cudy,wr3000e-v1|\
 @@ -189,11 +189,18 @@ case "$board" in
  		[ "$PHYNBR" = "0" ] && echo "$addr_2g" > /sys${DEVPATH}/macaddress
  		[ "$PHYNBR" = "1" ] && echo "$addr_5g" > /sys${DEVPATH}/macaddress
@@ -24,11 +24,11 @@
  		[ "$PHYNBR" = "0" ] && macaddr_add $addr 1 > /sys${DEVPATH}/macaddress
  		[ "$PHYNBR" = "1" ] && macaddr_add $addr 2 > /sys${DEVPATH}/macaddress
  		;;
-+	c8-668gl|\
++	nradio,c8-660|\
  	nradio,c8-668gl)
  		hw_mac_addr=$(mmc_get_mac_ascii bdinfo "fac_mac ")
  		[ "$PHYNBR" = "0" ] && echo "$hw_mac_addr" > /sys${DEVPATH}/macaddress
-@@ -227,6 +234,26 @@ case "$board" in
+@@ -227,6 +234,21 @@ case "$board" in
  	tplink,tl-xtr8488)
  		[ "$PHYNBR" = "1" ] && get_mac_label > /sys${DEVPATH}/macaddress
  		;;
@@ -44,11 +44,6 @@
 +		;;
 +    sl,3000-emmc)
 +		label_mac=$(mmc_get_mac_binary factory 0x04)
-+		[ "$PHYNBR" = "0" ] && macaddr_add $label_mac 1 > /sys${DEVPATH}/macaddress
-+		[ "$PHYNBR" = "1" ] && macaddr_add $label_mac 2 > /sys${DEVPATH}/macaddress
-+		;;
-+    bt,r320)
-+		label_mac=$(mmc_get_mac_binary factory 0x4)
 +		[ "$PHYNBR" = "0" ] && macaddr_add $label_mac 1 > /sys${DEVPATH}/macaddress
 +		[ "$PHYNBR" = "1" ] && macaddr_add $label_mac 2 > /sys${DEVPATH}/macaddress
 +		;;

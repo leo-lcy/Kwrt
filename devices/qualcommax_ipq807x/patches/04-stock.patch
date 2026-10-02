@@ -18,7 +18,7 @@
 
 --- a/target/linux/qualcommax/ipq807x/base-files/lib/upgrade/platform.sh
 +++ b/target/linux/qualcommax/ipq807x/base-files/lib/upgrade/platform.sh
-@@ -83,20 +83,29 @@ platform_do_upgrade() {
+@@ -242,21 +242,29 @@ platform_do_upgrade() {
  	redmi,ax6|\
  	xiaomi,ax3600|\
  	xiaomi,ax9000)
@@ -40,10 +40,6 @@
 +			# or uboot will skip the loading of this partition
 +			fw_setenv flag_try_sys1_failed 0
 +		fi
-+
-+		# Tell uboot to switch partition
-+		fw_setenv flag_boot_rootfs "$target_num"
-+		fw_setenv flag_last_success "$target_num"
  
 -		# Enforce single partition.
 -		fw_setenv flag_boot_rootfs 0
@@ -51,15 +47,20 @@
 -		fw_setenv flag_boot_success 1
 -		fw_setenv flag_try_sys1_failed 8
 -		fw_setenv flag_try_sys2_failed 8
++		# Tell uboot to switch partition
++		fw_setenv flag_boot_rootfs "$target_num"
++		fw_setenv flag_last_success "$target_num"
++
 +		# Reset success flag
 +		fw_setenv flag_boot_success 0
  
 -		# Kernel and rootfs are placed in 2 different UBI
 -		CI_KERN_UBIPART="ubi_kernel"
 -		CI_ROOT_UBIPART="rootfs"
+-		CI_DATA_UBIPART="rootfs"
  		nand_do_upgrade "$1"
  		;;
- 	*)
+ 	spectrum,sax1v1k)
 
 --- /dev/null
 +++ b/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath10k-caldata

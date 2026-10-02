@@ -32,9 +32,9 @@ index 6957f0e4f4da54..abec845eb6f4d1 100644
  $(eval $(call generate-ipq-wifi-package,netgear_wax620,Netgear WAX620))
  $(eval $(call generate-ipq-wifi-package,netgear_wax630,Netgear WAX630))
 +$(eval $(call generate-ipq-wifi-package,philips_ly1800,Philips LY1800))
- $(eval $(call generate-ipq-wifi-package,prpl_haze,prpl Haze))
  $(eval $(call generate-ipq-wifi-package,qihoo_360v6,Qihoo 360V6))
  $(eval $(call generate-ipq-wifi-package,qnap_301w,QNAP 301w))
+ $(eval $(call generate-ipq-wifi-package,prpl_haze,prpl Haze))
 diff --git a/target/linux/qualcommax/image/ipq60xx.mk b/target/linux/qualcommax/image/ipq60xx.mk
 index df69b2d9e60567..67eee6f6ad1750 100644
 --- a/target/linux/qualcommax/image/ipq60xx.mk
@@ -80,18 +80,26 @@ index de70df08aa6c31..9b5d1906f9edd0 100644
  	netgear,wax610|\
  	netgear,wax610y|\
 +	philips,ly1800|\
- 	qihoo,360v6|\
  	redmi,ax5|\
  	xiaomi,ax1800|\
+ 	kt,ar06-012h|\
 diff --git a/target/linux/qualcommax/ipq60xx/base-files/lib/upgrade/platform.sh b/target/linux/qualcommax/ipq60xx/base-files/lib/upgrade/platform.sh
 index 22ea86a35677fa..d8ef0afe547707 100644
 --- a/target/linux/qualcommax/ipq60xx/base-files/lib/upgrade/platform.sh
 +++ b/target/linux/qualcommax/ipq60xx/base-files/lib/upgrade/platform.sh
-@@ -22,6 +22,7 @@ platform_do_upgrade() {
- 	jdcloud,re-ss-01|\
+@@ -101,6 +101,7 @@ platform_do_upgrade() {
+ 	jdcloud,re-cs-07|\
  	link,nn6000-v1|\
  	link,nn6000-v2|\
 +	philips,ly1800|\
  	redmi,ax5-jdcloud)
- 		kernelname="0:HLOS"
- 		rootfsname="rootfs"
+ 		CI_KERNPART="0:HLOS"
+ 		CI_ROOTPART="rootfs"
+@@ -119,6 +120,7 @@ platform_copy_config() {
+ 	jdcloud,re-cs-07|\
+ 	link,nn6000-v1|\
+ 	link,nn6000-v2|\
++	philips,ly1800|\
+ 	redmi,ax5-jdcloud)
+ 		emmc_copy_config
+ 		;;

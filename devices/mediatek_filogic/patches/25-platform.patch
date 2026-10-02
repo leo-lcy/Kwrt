@@ -1,6 +1,6 @@
 --- a/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
 +++ b/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
-@@ -110,7 +110,6 @@
+@@ -121,7 +121,6 @@
  	bananapi,bpi-r4-lite|\
  	bazis,ax3000wm|\
  	cmcc,a10-ubootmod|\
@@ -8,10 +8,10 @@
  	comfast,cf-wr632ax-ubootmod|\
  	creatlentem,clt-r30b1-ubi|\
  	cudy,m3000-v1-ubootmod|\
-@@ -122,11 +121,7 @@
- 	cudy,wr3000h-v1-ubootmod|\
+@@ -134,11 +133,7 @@
  	cudy,wr3000p-v1-ubootmod|\
  	gatonetworks,gdsp|\
+ 	globitel,bt-r320|\
 -	h3c,magic-nx30-pro|\
  	imou,hx21|\
 -	jcg,q30-pro|\
@@ -20,7 +20,7 @@
  	mediatek,mt7981-rfb|\
  	mediatek,mt7988a-rfb|\
  	mercusys,mr90x-v1-ubi|\
-@@ -134,19 +129,11 @@
+@@ -147,20 +142,12 @@
  	netis,nx30v2|\
  	netis,nx31|\
  	netis,nx32u|\
@@ -33,6 +33,7 @@
  	routerich,ax3000-ubootmod|\
  	routerich,be7200|\
  	snr,snr-cpe-ax2|\
+ 	teralink,tl3020-256mb|\
 -	tplink,tl-xdr4288|\
 -	tplink,tl-xdr6086|\
 -	tplink,tl-xdr6088|\
@@ -40,7 +41,7 @@
  	wavlink,wl-wnt100x3-ubootmod|\
  	xiaomi,mi-router-ax3000t-ubootmod|\
  	xiaomi,redmi-router-ax6000-ubootmod|\
-@@ -160,6 +147,9 @@
+@@ -174,6 +161,9 @@
  	acer,vero-w6m|\
  	airpi,ap3000m|\
  	arcadyan,mozart|\
@@ -50,7 +51,7 @@
  	glinet,gl-mt2500|\
  	glinet,gl-mt2500-airoha|\
  	glinet,gl-mt6000|\
-@@ -289,13 +279,6 @@
+@@ -330,14 +320,6 @@
  			;;
  		esac
  		;;
@@ -59,12 +60,13 @@
 -	xiaomi,redmi-router-ax6000-stock)
 -		CI_KERN_UBIPART=ubi_kernel
 -		CI_ROOT_UBIPART=ubi
+-		CI_DATA_UBIPART=ubi
 -		nand_do_upgrade "$1"
 -		;;
  	*)
  		nand_do_upgrade "$1"
  		;;
-@@ -321,7 +304,6 @@
+@@ -363,7 +345,6 @@
  	bananapi,bpi-r4-lite|\
  	bazis,ax3000wm|\
  	cmcc,a10-ubootmod|\
@@ -72,10 +74,10 @@
  	comfast,cf-wr632ax-ubootmod|\
  	creatlentem,clt-r30b1-ubi|\
  	cudy,m3000-v1-ubootmod|\
-@@ -333,25 +315,14 @@
- 	cudy,wr3000h-v1-ubootmod|\
+@@ -376,27 +357,16 @@
  	cudy,wr3000p-v1-ubootmod|\
  	gatonetworks,gdsp|\
+ 	globitel,bt-r320|\
 -	h3c,magic-nx30-pro|\
 -	jcg,q30-pro|\
 -	jdcloud,re-cp-03|\
@@ -85,12 +87,14 @@
  	mercusys,mr90x-v1-ubi|\
 -	nokia,ea0326gmp|\
  	netis,eap930-v1|\
+ 	netis,n6-v2|\
  	netis,nx32u|\
  	openwrt,one|\
 -	netcore,n60|\
 -	qihoo,360t7|\
  	qihoo,360t7-ubi|\
  	routerich,ax3000-ubootmod|\
+ 	teralink,tl3020-256mb|\
 -	tplink,tl-xdr4288|\
 -	tplink,tl-xdr6086|\
 -	tplink,tl-xdr6088|\
@@ -98,7 +102,7 @@
  	wavlink,wl-wnt100x3-ubootmod|\
  	xiaomi,mi-router-ax3000t-ubootmod|\
  	xiaomi,redmi-router-ax6000-ubootmod|\
-@@ -403,6 +374,9 @@
+@@ -448,6 +418,9 @@
  	acer,vero-w6m|\
  	airpi,ap3000m|\
  	arcadyan,mozart|\
@@ -108,13 +112,11 @@
  	glinet,gl-mt2500|\
  	glinet,gl-mt2500-airoha|\
  	glinet,gl-mt6000|\
-@@ -426,6 +400,19 @@
+@@ -472,6 +445,17 @@
  	esac
  }
  
-+
-+tenbay_dualboot_fixup()
-+{
++tenbay_dualboot_fixup() {
 +	[ "$(rootfs_type)" = "tmpfs" ] || return 0
 +
 +	if ! fw_printenv -n boot_from &>/dev/null; then
@@ -128,8 +130,8 @@
  platform_pre_upgrade() {
  	local board=$(board_name)
  
-@@ -445,10 +432,8 @@
- 	jiorouter,ax6000-jidu6101)
+@@ -492,10 +476,8 @@
+ 	jiorouter,ax6000-jidu6j01)
  		jiorouter_initial_setup
  		;;
 -	xiaomi,mi-router-ax3000t|\

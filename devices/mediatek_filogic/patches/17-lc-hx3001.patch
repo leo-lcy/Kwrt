@@ -266,7 +266,7 @@
  glinet,gl-x3000|\
  glinet,gl-xe3000)
  	ucidef_set_led_default "power" "POWER" "green:power" "1"
-@@ -145,6 +154,15 @@ mercusys,mr85x)
+@@ -145,6 +154,11 @@ mercusys,mr85x)
  	ucidef_set_led_switch "lan2" "lan-2" "green:lan-2" "switch0" "0x04"
  	ucidef_set_led_netdev "wan" "wan" "green:wan" "eth1" "link tx rx"
  	;;
@@ -274,10 +274,6 @@
 +	ucidef_set_led_default "green" "GREEN" "q3000:green" "1"
 +	ucidef_set_led_default "blue" "BLUE" "q3000:blue" "0"
 +	ucidef_set_led_default "red" "RED" "q3000:red" "0"
-+	;;
-+bt,r320)
-+	ucidef_set_led_netdev "wlan2g" "2.4G" "green:wlan-2ghz" "phy0-ap0"
-+	ucidef_set_led_netdev "wlan5g" "5G" "green:wlan-5ghz" "phy1-ap0"
 +	;;
  mercusys,mr90x-v1|\
  mercusys,mr90x-v1-ubi)

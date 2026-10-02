@@ -1,6 +1,6 @@
 --- a/package/boot/uboot-tools/uboot-envtools/files/mediatek_filogic
 +++ b/package/boot/uboot-tools/uboot-envtools/files/mediatek_filogic
-@@ -58,13 +58,15 @@ zyxel,ex5601-t0-ubootmod)
+@@ -58,14 +58,16 @@ zyxel,ex5601-t0-ubootmod)
  acer,predator-w6|\
  acer,predator-w6d|\
  acer,vero-w6m|\
@@ -10,6 +10,7 @@
  glinet,gl-mt6000|\
  glinet,gl-x3000|\
  glinet,gl-xe3000|\
+ globitel,bt-r320|\
  huasifei,wh3000|\
 -nradio,c8-668gl)
 +nradio,c8-668gl|\
@@ -17,14 +18,6 @@
  	ubootenv_add_mmc "u-boot-env" "" "0x0" "0x80000"
  	;;
  asiarf,ap7986-003|\
-@@ -84,6 +86,7 @@ bananapi,bpi-r3-mini|\
- bananapi,bpi-r4|\
- bananapi,bpi-r4-lite|\
- bananapi,bpi-r4-poe|\
-+bt,r320|\
- cmcc,rax3000m|\
- jdcloud,re-cp-03)
- 	. /lib/upgrade/fit.sh
 @@ -146,11 +149,14 @@ ubnt,unifi-6-plus)
  	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x80000" "0x10000"
  	;;
