@@ -4,7 +4,7 @@ ROOT_PASSWD=__ROOT_PASSWD_SHELL__
 
 uci set network.lan.ipaddr='192.168.10.1'
 uci set network.lan.netmask='255.255.255.0'
-uci set system.@system[0].hostname='Cudy-TR3000'
+uci set system.@system[0].hostname='Router'
 uci set system.@system[0].timezone='CST-8'
 uci set system.@system[0].zonename='Asia/Shanghai'
 echo '192.168.10.1 router' >> /etc/hosts
