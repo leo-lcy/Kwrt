@@ -19,6 +19,23 @@ Cudy 复用本仓库的 `cudy_tr3000-mod` 112M 分区布局，不适用于原厂
 - Cudy 使用仓库的 `ROOT_PASSWD`、`WIFI_PASSWD` Actions Secrets；AX6000 继续使用现有 Secrets。Cudy 密码以 shell 引号转义，支持特殊字符。
 - 编译后检查所选机型、插件与 USB 驱动清单以及固件 SHA256，再上传 Artifacts。实机 USB 供电、启动和网络稳定性仍需接机验证。
 
+### Tailscale 基础配置
+
+两台预设 `tailscale` 接口（`tailscale0`、协议 `none`）与 Tailscale 防火墙区域，允许 LAN 与 Tailscale 双向转发、Tailscale 到有线 WAN 转发；Cudy 额外允许到 F50 USB 上网区域转发。保留现有 UDP 41641 入站规则与 HTTPS 后台访问设置。
+
+**默认关闭 Tailscale 服务及其设置辅助服务。** 首次启动脚本只运行一次，手动开启后不会在每次重启时关闭。升级后即使保留了旧配置，也需要重新开启服务；登录状态文件不会由这个脚本读取、复制或删除。
+
+需要时在 LuCI 的 Tailscale 页面启用服务并自行登录、配置子网或出口节点、在 Tailscale 管理后台授权。使用 CLI 时先执行：
+
+```sh
+uci set tailscale.settings.service_enabled='1'
+uci commit tailscale
+/etc/init.d/tailscale enable
+/etc/init.d/tailscale start
+```
+
+然后按自己的用途运行 `tailscale up`；预设防火墙可配合 `--netfilter-mode=off` 使用。默认脚本不登录、不发布子网或出口、不设置 DNS 或默认路由，也不包含认证密钥或设备状态。同一家庭的旧配置只能恢复到原设备，两台不能共用登录状态。
+
 ---
 
 #### 固件下载与在线定制: [openwrt.ai](https://openwrt.ai)
@@ -57,4 +74,3 @@ Cudy 复用本仓库的 `cudy_tr3000-mod` 112M 分区布局，不适用于原厂
 - [aparcar](https://github.com/openwrt/asu)
 - [GitHub](https://github.com)
 - [GitHub Actions](https://github.com/features/actions)
-

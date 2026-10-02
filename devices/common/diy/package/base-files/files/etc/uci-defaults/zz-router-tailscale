@@ -1,0 +1,73 @@
+#!/bin/sh
+# Shared AX6000 / Cudy defaults. OpenWrt removes this file after it succeeds.
+# Only prepare networking: login, DNS, advertised routes and exit-node choices
+# remain manual. Never copy a device identity or run `tailscale up` here.
+set -e
+
+uci set network.tailscale=interface
+uci set network.tailscale.proto='none'
+uci set network.tailscale.device='tailscale0'
+
+# Reuse an existing zone, including one restored as an anonymous section.
+ts_zone=''
+for zone in $(uci -q show firewall | sed -n 's/^firewall\.\([^=]*\)=zone$/\1/p'); do
+	[ "$(uci -q get "firewall.$zone.name")" = 'tailscale' ] || continue
+	ts_zone=$zone
+	break
+done
+if [ -z "$ts_zone" ]; then
+	ts_zone='tailscale'
+	uci set "firewall.$ts_zone=zone"
+fi
+uci set "firewall.$ts_zone.name=tailscale"
+uci set "firewall.$ts_zone.input=ACCEPT"
+uci set "firewall.$ts_zone.output=ACCEPT"
+uci set "firewall.$ts_zone.forward=ACCEPT"
+uci set "firewall.$ts_zone.masq=1"
+uci set "firewall.$ts_zone.mtu_fix=1"
+case " $(uci -q get "firewall.$ts_zone.network") " in
+	*' tailscale '*) ;;
+	*) uci add_list "firewall.$ts_zone.network=tailscale" ;;
+esac
+
+ensure_forwarding() {
+	local section
+	for section in $(uci -q show firewall | sed -n 's/^firewall\.\([^=]*\)=forwarding$/\1/p'); do
+		[ "$(uci -q get "firewall.$section.src")" = "$1" ] || continue
+		[ "$(uci -q get "firewall.$section.dest")" = "$2" ] || continue
+		return 0
+	done
+	uci set "firewall.$3=forwarding"
+	uci set "firewall.$3.src=$1"
+	uci set "firewall.$3.dest=$2"
+}
+
+ensure_forwarding lan tailscale lan_to_tailscale
+ensure_forwarding tailscale lan tailscale_to_lan
+ensure_forwarding tailscale wan tailscale_to_wan
+
+# Cudy has a separate USB uplink zone; AX6000 keeps its wired WAN only.
+for zone in $(uci -q show firewall | sed -n 's/^firewall\.\([^=]*\)=zone$/\1/p'); do
+	[ "$(uci -q get "firewall.$zone.name")" = 'f50' ] || continue
+	ensure_forwarding tailscale f50 tailscale_to_f50
+	break
+done
+uci commit network
+uci commit firewall
+
+# Run after package defaults, before the normal S80 Tailscale boot service.
+# Also applies after an upgrade with settings restored: opt in again manually.
+if ! uci -q get tailscale.settings >/dev/null; then
+	uci set tailscale.settings=settings
+fi
+uci set tailscale.settings.service_enabled='0'
+uci commit tailscale
+# Newer LuCI packages also have a settings service which can restart the daemon
+# on reload and change DNS. Keep that service dormant until the user opts in.
+if [ -x /etc/init.d/tailscale-settings ]; then
+	/etc/init.d/tailscale-settings disable
+	/etc/init.d/tailscale-settings stop >/dev/null 2>&1 || true
+fi
+/etc/init.d/tailscale disable
+/etc/init.d/tailscale stop >/dev/null 2>&1 || true
+exit 0
