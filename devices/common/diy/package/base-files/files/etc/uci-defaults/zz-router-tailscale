@@ -62,11 +62,12 @@ if ! uci -q get tailscale.settings >/dev/null; then
 fi
 uci set tailscale.settings.service_enabled='0'
 uci commit tailscale
-# Newer LuCI packages also have a settings service which can restart the daemon
-# on reload and change DNS. Keep that service dormant until the user opts in.
+# The build prepares LuCI's helper to honor service_enabled before applying
+# settings. Register its reload trigger so the GUI enable switch still works.
+# With service_enabled=0 it does not apply DNS, routes or start tailscaled.
 if [ -x /etc/init.d/tailscale-settings ]; then
-	/etc/init.d/tailscale-settings disable
-	/etc/init.d/tailscale-settings stop >/dev/null 2>&1 || true
+	/etc/init.d/tailscale-settings enable
+	/etc/init.d/tailscale-settings start
 fi
 /etc/init.d/tailscale disable
 /etc/init.d/tailscale stop >/dev/null 2>&1 || true

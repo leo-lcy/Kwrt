@@ -1,5 +1,6 @@
 """Exercise the first-boot script with fresh and restored OpenWrt settings."""
 import json
+import importlib.util
 import os
 from pathlib import Path
 import subprocess
@@ -39,6 +40,13 @@ else:
     if args == ['disable']:
         state['enabled'][name] = False
     elif args == ['stop']:
+        state['running'][name] = False
+    elif name == 'tailscale-settings' and args == ['enable']:
+        state['enabled'][name] = True
+    elif name == 'tailscale-settings' and args == ['start']:
+        state['registered'] = True
+        if state['uci']['tailscale.settings.service_enabled'] != '0':
+            raise RuntimeError('Helper started without the opt-out preference')
         state['running'][name] = False
     else:
         raise RuntimeError('Unexpected service operation')
@@ -103,8 +111,9 @@ class TailscaleDefaults(unittest.TestCase):
                 self.assertFalse(state['enabled']['tailscale'])
                 self.assertFalse(state['running']['tailscale'])
                 if helper:
-                    self.assertFalse(state['enabled']['tailscale-settings'])
+                    self.assertTrue(state['enabled']['tailscale-settings'])
                     self.assertFalse(state['running']['tailscale-settings'])
+                    self.assertTrue(state['registered'])
                 self.assertEqual(config['network.tailscale.proto'], 'none')
                 self.assertEqual(config['network.tailscale.device'], 'tailscale0')
                 zones = [k for k, v in config.items() if v == 'zone' and config.get(k + '.name') == 'tailscale']
@@ -119,7 +128,8 @@ class TailscaleDefaults(unittest.TestCase):
                 if cudy:
                     expected.append(('tailscale', 'f50'))
                 self.assertCountEqual(pairs, expected)
-                self.assertTrue(all(call[1] in ('disable', 'stop') for call in state['calls']))
+                self.assertTrue(all(call[1] in ('disable', 'stop') for call in state['calls']
+                                    if call[0] == 'tailscale'))
                 if previous is not None:
                     self.assertEqual(config, previous)
                 previous = config
@@ -137,6 +147,45 @@ class TailscaleDefaults(unittest.TestCase):
 
     def test_older_package_without_settings_service(self):
         self.exercise(cudy=False, restored=False, helper=False)
+
+    def test_helper_honors_preference_at_boot_and_reload(self):
+        spec = importlib.util.spec_from_file_location('prepare', REPO / 'scripts/prepare-tailscale-service.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp)
+            path = package / 'root/etc/init.d/tailscale-settings'
+            path.parent.mkdir(parents=True)
+            # Execute the shell callbacks, so a disabled service cannot apply DNS
+            # or routes, while opting in works both at boot and from LuCI reload.
+            source = '''handle_service_state() {
+    if [ "$service_enabled" = '1' ]; then
+        printf 'daemon-start\\n'
+        apply_settings
+    else
+        printf 'daemon-stop\\n'
+    fi
+}
+apply_settings() { printf 'settings-apply\\n'; }
+start_service() {
+    apply_settings
+}
+reload_service() { handle_service_state; }
+'''
+            path.write_text(source)
+            module.prepare(package)
+            prepared = path.read_text()
+            module.prepare(package)
+            self.assertEqual(path.read_text(), prepared)
+            for callback in ('start_service', 'reload_service'):
+                for enabled in ('0', '1'):
+                    result = subprocess.run(['sh'], input=prepared + '\nservice_enabled=' + enabled + '\n' + callback,
+                                            text=True, capture_output=True, check=True)
+                    expected = 'daemon-stop\n' if enabled == '0' else 'daemon-start\nsettings-apply\n'
+                    self.assertEqual(result.stdout, expected)
+            path.write_text('start_service() { unexpected_upstream_change; }')
+            with self.assertRaises(ValueError):
+                module.prepare(package)
 
 
 if __name__ == '__main__':

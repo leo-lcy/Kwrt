@@ -23,11 +23,13 @@ Cudy 复用本仓库的 `cudy_tr3000-mod` 112M 分区布局，不适用于原厂
 
 两台预设 `tailscale` 接口（`tailscale0`、协议 `none`）与 Tailscale 防火墙区域，允许 LAN 与 Tailscale 双向转发、Tailscale 到有线 WAN 转发；Cudy 额外允许到 F50 USB 上网区域转发。保留现有 UDP 41641 入站规则与 HTTPS 后台访问设置。
 
-**默认关闭 Tailscale 服务及其设置辅助服务。** 首次启动脚本只运行一次，手动开启后不会在每次重启时关闭。升级后即使保留了旧配置，也需要重新开启服务；登录状态文件不会由这个脚本读取、复制或删除。
+**默认关闭 Tailscale 服务。** 设置辅助脚本仅登记配置变化，已修正为先检查启用开关：未启用时不启动 tailscaled，也不应用 DNS 或路由设置。 首次启动脚本只运行一次，手动开启后不会在每次重启时关闭。升级后即使保留了旧配置，也需要重新开启服务；登录状态文件不会由这个脚本读取、复制或删除。
 
 需要时在 LuCI 的 Tailscale 页面启用服务并自行登录、配置子网或出口节点、在 Tailscale 管理后台授权。使用 CLI 时先执行：
 
 ```sh
+# CLI 管理时关闭辅助脚本，避免它覆盖 CLI 参数。
+[ ! -x /etc/init.d/tailscale-settings ] || { /etc/init.d/tailscale-settings disable; /etc/init.d/tailscale-settings stop; }
 uci set tailscale.settings.service_enabled='1'
 uci commit tailscale
 /etc/init.d/tailscale enable

@@ -237,6 +237,11 @@ jobs:
         fi
         cp -Rf ./diy/* ./ || true
 
+    - name: Prepare optional Tailscale service
+      run: |
+        python3 scripts/prepare-tailscale-service.py \
+          --package openwrt/package/feeds/kiddin9/luci-app-tailscale-community
+
     - name: Apply patches
       run: |
         cd openwrt
