@@ -5,7 +5,7 @@
 | device | 设备与上网方式 | 后台地址 |
 | --- | --- | --- |
 | `ax6000`（默认） | Redmi AX6000，现有 PPPoE 配置 | `192.168.10.1` |
-| `cudy_tr3000` | Cudy TR3000 v1 112M，F50 USB 共享网络 | `192.168.10.1` |
+| `cudy_tr3000` | Cudy TR3000 v1 112M，F50 USB 共享网络 | `192.168.20.1` |
 
 首次编译新机型或需要刷新 feeds 时勾选 `nocache`。两个机型分别使用缓存和 Artifacts，下载名称包含所选机型。
 Repo Dispatcher 也支持同样的机型选择，可通过 `param` 传入 `ssh`、`nocache` 等参数，每次只触发所选设备。
@@ -18,6 +18,8 @@ Cudy 复用本仓库的 `cudy_tr3000-mod` 112M 分区布局，不适用于原厂
 - Cudy 沿用 Argon、PassWall2、Tailscale、Turbo ACC、双频 `Home 2.4G` / `Home 5G` Wi-Fi、HTTPS 后台和 SSH 端口 `30001`，不写入 AX6000 的 PPPoE、光猫访问或 LAN 端口设置。
 - Cudy 使用仓库的 `ROOT_PASSWD`、`WIFI_PASSWD` Actions Secrets；AX6000 继续使用现有 Secrets。Cudy 密码以 shell 引号转义，支持特殊字符。
 - 编译后检查所选机型、插件与 USB 驱动清单以及固件 SHA256，再上传 Artifacts。实机 USB 供电、启动和网络稳定性仍需接机验证。
+
+Cudy 的 LAN 为 `192.168.20.0/24`，AX6000 的 LAN 为 `192.168.10.0/24`；两台在各自家中都可通过 `https://router.lan` 访问后台（客户端需使用对应路由器的 DNS）。Cudy 登录 Tailscale 后按需发布 `192.168.20.0/24`，AX6000 的子网发布仍按原来的配置恢复。F50 USB 侧通过 DHCP 获取地址，接机后核对其网段与 Cudy LAN 不重叠。
 
 ### Tailscale 基础配置
 

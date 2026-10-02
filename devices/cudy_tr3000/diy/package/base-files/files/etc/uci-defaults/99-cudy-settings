@@ -2,12 +2,24 @@
 # Cudy TR3000 v1 112M: F50 USB WAN, default wired LAN/WAN from board.d.
 ROOT_PASSWD=__ROOT_PASSWD_SHELL__
 
-uci set network.lan.ipaddr='192.168.10.1'
+uci set network.lan.ipaddr='192.168.20.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set system.@system[0].hostname='Router'
 uci set system.@system[0].timezone='CST-8'
 uci set system.@system[0].zonename='Asia/Shanghai'
-echo '192.168.10.1 router' >> /etc/hosts
+# Replace our old/new shortcut entries when settings were restored on upgrade.
+# Keep unrelated hosts and aliases intact; dnsmasq expands router to router.lan.
+cudy_hosts_tmp=$(mktemp) || exit 1
+if ! awk '!(NF == 2 && ($1 == "192.168.10.1" || $1 == "192.168.20.1") && $2 == "router")' /etc/hosts > "$cudy_hosts_tmp"; then
+	rm -f "$cudy_hosts_tmp"
+	exit 1
+fi
+printf '%s\n' '192.168.20.1 router' >> "$cudy_hosts_tmp"
+if ! cat "$cudy_hosts_tmp" > /etc/hosts; then
+	rm -f "$cudy_hosts_tmp"
+	exit 1
+fi
+rm -f "$cudy_hosts_tmp"
 printf '%s\n%s\n' "$ROOT_PASSWD" "$ROOT_PASSWD" | passwd root
 unset ROOT_PASSWD
 uci set dropbear.@dropbear[0].Port='30001'

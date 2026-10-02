@@ -59,7 +59,7 @@ if name != 'uci' and args == ['stop']: sys.exit(1)
 class TailscaleDefaults(unittest.TestCase):
     def exercise(self, cudy, restored, helper):
         baseline = {
-            'network.lan': 'interface', 'network.lan.ipaddr': '192.168.10.1',
+            'network.lan': 'interface', 'network.lan.ipaddr': '192.168.20.1' if cudy else '192.168.10.1',
             'network.wan': 'interface', 'network.wan.proto': 'dhcp' if cudy else 'pppoe',
             'network.wan.metric': '20' if cudy else '0',
             'dhcp.main.server': ['223.5.5.5'],
@@ -69,7 +69,7 @@ class TailscaleDefaults(unittest.TestCase):
             'tailscale.settings': 'settings', 'tailscale.settings.service_enabled': '1',
             'tailscale.settings.port': '41641',
             'tailscale.settings.dns_mode': 'disabled',
-            'tailscale.settings.advertise_routes': ['192.168.10.0/24'],
+            'tailscale.settings.advertise_routes': ['192.168.20.0/24'] if cudy else ['192.168.10.0/24'],
         }
         if cudy:
             baseline.update({'network.wan_f50': 'interface', 'network.wan_f50.proto': 'dhcp',
