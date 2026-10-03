@@ -1,9 +1,17 @@
 #!/bin/sh
-# The enclosure status LED is controlled through OpenWrt's standard LED service.
+# The slider enables the standard LED settings or temporarily turns white:status off.
+set -e
 uci set system.cudy_led_status=led
-uci set system.cudy_led_status.name='Status'
+uci set system.cudy_led_status.name='NET_ACTIVITY'
 uci set system.cudy_led_status.sysfs='white:status'
-uci set system.cudy_led_status.trigger='none'
+uci set system.cudy_led_status.trigger='netdev'
+uci set system.cudy_led_status.dev='eth2'
 uci set system.cudy_led_status.default='0'
+uci set system.cudy_led_status.interval='50'
+uci -q delete system.cudy_led_status.mode || true
+uci add_list system.cudy_led_status.mode='tx'
+uci add_list system.cudy_led_status.mode='rx'
 uci commit system
+/etc/init.d/kwrt-led-slider enable
+/etc/init.d/kwrt-led-slider start
 exit 0
