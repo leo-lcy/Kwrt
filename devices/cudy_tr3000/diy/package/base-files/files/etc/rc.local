@@ -6,8 +6,14 @@ for radio in $(uci -q show wireless | sed -n 's/^wireless\.\([^=]*\)=wifi-device
 	uci set "wireless.$radio.country=CN"
 	uci set "wireless.$radio.disabled=0"
 	case "$(uci -q get "wireless.$radio.band")" in
-		2g) uci set "wireless.$radio.channel=auto" ;;
-		5g) uci set "wireless.$radio.channel=149" ;;
+		2g)
+			uci set "wireless.$radio.channel=auto"
+			uci set "wireless.$radio.htmode=HE20"
+			;;
+		5g)
+			uci set "wireless.$radio.channel=149"
+			uci set "wireless.$radio.htmode=HE80"
+			;;
 	esac
 done
 for iface in $(uci -q show wireless | sed -n 's/^wireless\.\([^=]*\)=wifi-iface$/\1/p'); do
