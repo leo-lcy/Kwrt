@@ -82,13 +82,3 @@ sed -i \
 sed -i -e "s/set \${s}.country='\${country || ''}'/set \${s}.country='\${country || \"CN\"}'/g" -e "s/set \${si}.disabled=.*/set \${si}.disabled='0'/" package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc
 
 rm -rf package/feeds/packages/jool
-
-# Fix xray-core: remove outdated AllowInsecure patch that fails on new Xray versions
-rm -f feeds/kiddin9/xray-core/patches/AllowInsecure.patch
-
-# Fix PassWall2 status bar bug: wrong paths pointing to passwall(v1) instead of passwall2
-PW2_FILE="package/feeds/kiddin9/luci-app-passwall2/luasrc/view/passwall2/global/status_bottom.htm"
-[ -f "$PW2_FILE" ] && {
-  sed -i 's#/luci-static/passwall/#/luci-static/passwall2/#g' "$PW2_FILE"
-  sed -i 's#\[\[passwall\]\]#\[\[passwall2\]\]#g' "$PW2_FILE"
-}

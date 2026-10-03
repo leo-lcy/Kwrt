@@ -58,11 +58,6 @@ jobs:
       with:
           fetch-depth: 0
 
-    # - name: Set up secret file
-      # run: |
-        # echo ${{ secrets.TELEGRAM_CHAT_ID }} | sed 's/./& /g'
-        # echo ${{ secrets.TELEGRAM_TOKEN }} | sed 's/./& /g'
-
     - name: Load Settings.ini
       run: |
         echo ${{matrix.target}}
