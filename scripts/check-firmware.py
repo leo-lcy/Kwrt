@@ -40,7 +40,7 @@ def check(device: str, directory: Path, config: Path) -> None:
     if len(manifests) != 1:
         raise ValueError(f'Missing package manifest for {profile}')
     installed = {line.split()[0] for line in manifests[0].read_text().splitlines() if line.strip()}
-    required = {'luci-app-passwall2', 'luci-app-tailscale-community', 'luci-app-turboacc'}
+    required = {'luci-app-passwall2', 'xray-core', 'tailscale', 'luci-app-tailscale-community', 'luci-app-turboacc'}
     if device == 'cudy_tr3000':
         required.update(CUDY_PACKAGES)
         for package in CUDY_PACKAGES:
