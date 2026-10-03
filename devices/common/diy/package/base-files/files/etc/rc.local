@@ -6,15 +6,34 @@ WIFI_PASSWD=__WIFI_PASSWD_SHELL__
 # 幂等 + 自删: 只跑一次
 #=================================================
 
-# === WiFi: 配置双频 (disabled 由 diy.sh 改 mac80211.uc 默认值解决) ===
-uci set wireless.@wifi-device[0].channel='11'
-uci set wireless.@wifi-iface[0].ssid='Home 2.4G'
-uci set "wireless.@wifi-iface[0].key=$WIFI_PASSWD"
-uci set wireless.@wifi-iface[0].encryption='psk2'
-uci set wireless.@wifi-device[1].channel='157'
-uci set wireless.@wifi-iface[1].ssid='Home 5G'
-uci set "wireless.@wifi-iface[1].key=$WIFI_PASSWD"
-uci set wireless.@wifi-iface[1].encryption='psk2'
+# Configure radios and their AP interfaces by frequency band.
+for radio in $(uci -q show wireless | sed -n 's/^wireless\.\([^=]*\)=wifi-device$/\1/p'); do
+	case "$(uci -q get "wireless.$radio.band")" in
+		2g)
+			uci set "wireless.$radio.channel=11"
+			uci set "wireless.$radio.htmode=HE20"
+			;;
+		5g)
+			uci set "wireless.$radio.channel=157"
+			uci set "wireless.$radio.htmode=HE80"
+			;;
+		*) continue ;;
+	esac
+	uci set "wireless.$radio.disabled=0"
+done
+for iface in $(uci -q show wireless | sed -n 's/^wireless\.\([^=]*\)=wifi-iface$/\1/p'); do
+	[ "$(uci -q get "wireless.$iface.mode")" = 'ap' ] || continue
+	radio=$(uci -q get "wireless.$iface.device")
+	case "$(uci -q get "wireless.$radio.band")" in
+		2g) uci set "wireless.$iface.ssid=Home 2.4G" ;;
+		5g) uci set "wireless.$iface.ssid=Home 5G" ;;
+		*) continue ;;
+	esac
+	uci set "wireless.$iface.key=$WIFI_PASSWD"
+	uci set "wireless.$iface.encryption=psk2"
+	uci set "wireless.$iface.disabled=0"
+done
+unset WIFI_PASSWD
 uci commit wireless
 wifi reload
 
