@@ -237,6 +237,11 @@ jobs:
         python3 scripts/prepare-tailscale-service.py \
           --package openwrt/package/feeds/kiddin9/luci-app-tailscale-community
 
+    - name: Keep Tailscale transport direct in PassWall2
+      run: |
+        python3 scripts/prepare-passwall2-tailscale.py \
+          --script openwrt/package/feeds/kiddin9/luci-app-passwall2/root/usr/share/passwall2/nftables.sh
+
     - name: Apply patches
       run: |
         cd openwrt
