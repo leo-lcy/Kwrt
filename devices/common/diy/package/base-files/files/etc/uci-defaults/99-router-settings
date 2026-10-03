@@ -87,6 +87,26 @@ uci add_list system.ntp.server='ntp.aliyun.com'
 uci add_list system.ntp.server='ntp.tencent.com'
 uci add_list system.ntp.server='cn.ntp.org.cn'
 
+# AX6000: disable both enclosure LEDs, including restored activity rules.
+for section in $(uci -q show system | sed -n 's/^system\.\([^=]*\)=led$/\1/p'); do
+	case "$(uci -q get "system.$section.sysfs")" in
+		rgb:network|rgb:status)
+			uci set "system.$section.trigger=none"
+			uci set "system.$section.default=0"
+			;;
+	esac
+done
+uci set system.led_wan=led
+uci set system.led_wan.name='NETWORK_OFF'
+uci set system.led_wan.sysfs='rgb:network'
+uci set system.led_wan.trigger='none'
+uci set system.led_wan.default='0'
+uci set system.led_status=led
+uci set system.led_status.name='POWER_OFF'
+uci set system.led_status.sysfs='rgb:status'
+uci set system.led_status.trigger='none'
+uci set system.led_status.default='0'
+
 uci commit
 
 exit 0
