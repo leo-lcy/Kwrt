@@ -1,0 +1,9 @@
+#!/bin/sh
+# The enclosure status LED is controlled through OpenWrt's standard LED service.
+uci set system.cudy_led_status=led
+uci set system.cudy_led_status.name='Status'
+uci set system.cudy_led_status.sysfs='white:status'
+uci set system.cudy_led_status.trigger='none'
+uci set system.cudy_led_status.default='0'
+uci commit system
+exit 0
