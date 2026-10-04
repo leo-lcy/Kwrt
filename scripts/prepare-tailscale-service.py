@@ -11,18 +11,31 @@ def prepare_ui(package: Path) -> None:
         print('Tailscale LuCI view absent; skipping device-list compatibility fix')
         return
     text = path.read_text()
-    if not re.search(r'\blastDevicesStatus\b', text):
-        print('Tailscale view does not use lastDevicesStatus; no fix needed')
-        return
-    if re.search(r'\b(?:let|const|var)\s+lastDevicesStatus\b', text):
-        print('Tailscale device-list status variable already declared')
+    declarations = {
+        'lastDevicesStatus': 'let lastDevicesStatus = null;',
+        'peerTableHeaders': """const peerTableHeaders = [
+    { text: _('Status') },
+    { text: _('Hostname') },
+    { text: _('IP') },
+    { text: _('OS') },
+    { text: _('Connection') },
+    { text: _('RX') },
+    { text: _('TX') },
+    { text: _('Last Seen') }
+];""",
+    }
+    missing = [definition for name, definition in declarations.items()
+               if re.search(r'\b' + name + r'\b', text)
+               and not re.search(r'\b(?:let|const|var)\s+' + name + r'\b', text)]
+    if not missing:
+        print('Tailscale device-list variables require no compatibility fix')
         return
     anchor = re.search(r'\blet\s+map\s*;', text)
     if not anchor:
         raise ValueError('Tailscale view changed; review device-list variable scope')
-    text = text[:anchor.end()] + '\nlet lastDevicesStatus = null;' + text[anchor.end():]
+    text = text[:anchor.end()] + '\n' + '\n'.join(missing) + text[anchor.end():]
     path.write_text(text)
-    print('Declared Tailscale device-list status variable in module scope')
+    print('Declared missing Tailscale device-list variables in module scope')
 
 
 def prepare(package: Path) -> None:
