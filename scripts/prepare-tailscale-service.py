@@ -1,11 +1,32 @@
 #!/usr/bin/env python3
-"""Make LuCI's boot helper honor the user's service_enabled preference."""
+"""Prepare Tailscale's optional service helper and LuCI device list."""
 import argparse
 from pathlib import Path
 import re
 
 
+def prepare_ui(package: Path) -> None:
+    path = package / 'htdocs/luci-static/resources/view/tailscale.js'
+    if not path.exists():
+        print('Tailscale LuCI view absent; skipping device-list compatibility fix')
+        return
+    text = path.read_text()
+    if not re.search(r'\blastDevicesStatus\b', text):
+        print('Tailscale view does not use lastDevicesStatus; no fix needed')
+        return
+    if re.search(r'\b(?:let|const|var)\s+lastDevicesStatus\b', text):
+        print('Tailscale device-list status variable already declared')
+        return
+    anchor = re.search(r'\blet\s+map\s*;', text)
+    if not anchor:
+        raise ValueError('Tailscale view changed; review device-list variable scope')
+    text = text[:anchor.end()] + '\nlet lastDevicesStatus = null;' + text[anchor.end():]
+    path.write_text(text)
+    print('Declared Tailscale device-list status variable in module scope')
+
+
 def prepare(package: Path) -> None:
+    prepare_ui(package)
     path = package / 'root/etc/init.d/tailscale-settings'
     if not path.exists():
         print('Tailscale settings helper absent; using the standard daemon service')
